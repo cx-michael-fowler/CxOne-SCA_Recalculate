@@ -14,7 +14,7 @@ Help
     .\CxOne - SCA_Recalculate.ps1 -help [<CommonParameters>]
 
 Recalculate
-    .\CxOne - SCA_Recalculate.ps1 [-all] [<CommonParameters>]
+    .\CxOne - SCA_Recalculate.ps1 [-all] [-silentLogin -apiKey <string>] [<CommonParameters>]
     
 
 .Notes
