@@ -1,4 +1,5 @@
-Powershell Script to run recalculate on SCA scans marked for Recalculation. Includes the option to run on all SCA scans
+Powershell Script to run recalculate on SCA scans marked for Recalculation. 
+Includes the option to run on all SCA scans with an optional filter to limit by days since the last scan
 
 Usage
 
