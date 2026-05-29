@@ -8,4 +8,4 @@ Help
 
 Recalculate
 
-    .\CxOne - SCA_Recalculate.ps1 [-all] [-silentLogin -apiKey <string>] [<CommonParameters>]
+    .\CxOne - SCA_Recalculate.ps1 [-all [daysSinceScan <int>]] [-silentLogin -apiKey <string>] [<CommonParameters>]
