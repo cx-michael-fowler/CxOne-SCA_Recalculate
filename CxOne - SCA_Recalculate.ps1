@@ -1,25 +1,27 @@
-﻿Using Module .\CxOneAPIModule
-#--------------------------------------------------------------------------------------------------------------------------------------------------------------
+﻿#--------------------------------------------------------------------------------------------------------------------------------------------------------------
 #region Help
 
 <#
 .Synopsis
-Script to find all scan where the SCA Recalculate is needed and kick off the process
+Script to perform recalculation on SCA Scans
 
 .Description
-Loops through all projects, retrieves the last scan and where the 
+Loops through all projects, retrieves the last scan. 
+By default will run the recalculate function only on scan s listed as needing recalculation
+Using the all parameter enables recalculation to run on projects. This can be limited by the daysSinceScan filter
+When using the all parameter the script will only run recalculate if the last scan included SCA
 
 Usage
 Help
     .\CxOne - SCA_Recalculate.ps1 -help [<CommonParameters>]
 
 Recalculate
-    .\CxOne - SCA_Recalculate.ps1 [-all] [-silentLogin -apiKey <string>] [<CommonParameters>]
+    .\CxOne - SCA_Recalculate.ps1 [-all [daysSinceScan <int>]] [-silentLogin -apiKey <string>] [<CommonParameters>]
     
 
 .Notes
-Version:     1.0
-Date:        13/05/2026
+Version:     2.0
+Date:        29/05/2026
 Written by:  Michael Fowler
 Contact:     michael.fowler@checkmarx.com
 
@@ -27,6 +29,7 @@ Change Log
 Version    Detail
 -----------------
 1.0        Original version
+2.0        Added parameter to limit by date since last scan + bug fix + only performs recalculation where  last scan included SCA
 
   
 .PARAMETER help
@@ -40,6 +43,9 @@ The API Key used to log into Checkamrx One. Is mandatory with silentLogin
 
 .PARAMETER all
 Forces the recalculate to run on the last scan for every project and not just those listed as requiring recalculation
+
+.Parameter daysSinceScan
+Optional parameter to limit the the recalaculation to scans completed more than than given number of days previously
 
 
 #>
@@ -58,7 +64,12 @@ Param (
     [switch]$silentLogin,
 
     [Parameter(ParameterSetName='CxOne',Mandatory=$false,HelpMessage="Run recalculation on all scans")]
-    [switch]$all
+    [Parameter(ParameterSetName='All',Mandatory=$true,HelpMessage="Run recalculation on all scans")]
+    [switch]$all,
+
+    [Parameter(ParameterSetName='CxOne',Mandatory=$false,HelpMessage="Run recalculation on scans completed more than given number of days previously")]
+    [Parameter(ParameterSetName='All',Mandatory=$false,HelpMessage="Run recalculation on scans completed more than given number of days previously")]
+    [int]$daysSinceScan
 
 )
 
@@ -104,7 +115,7 @@ Begin {
 Process {
 
     #Display help if called
-    if ($help -OR -NOT($logPath -XOR $scanId)) {
+    if ($help) {
         Get-Help $MyInvocation.InvocationName -Full | Out-String
         exit
     }
@@ -126,7 +137,10 @@ Process {
     $scans = Get-LastScans $conn $projects   
     # Filter results if not all flag set
     if (-Not $all) { $scans = $scans.values | Where-Object { if ($_) { $_.RecalcStatus.Contains("needRecalc_sca")} }}
-    else { $scans = $scans.values }
+    elseif ($daysSinceScan) {
+        $startDate = (Get-Date).AddDays(-$daysSinceScan)
+        $scans = $scans.values | Where-Object { if ($_) { ($_.CreatedAt -lt $startDate) -and ($_.EnginesString.Contains("sca")) } }
+    else { $scans = $scans.values | Where-Object { if ($_) {$_.EnginesString.Contains("sca")} } }
     Write-Host "Scans Retrived"
 
     $count = 0
